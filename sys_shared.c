@@ -27,7 +27,9 @@
 # include <sys/time.h>
 # include <time.h>
 # ifdef SUPPORTDLL
+# ifndef __WIIU__
 #  include <dlfcn.h>
+# endif
 # endif
 #endif
 
@@ -113,12 +115,15 @@ static qbool Sys_LoadDependencyFunctions(dllhandle_t dllhandle, const dllfunctio
 	return false;
 }
 
-qbool Sys_LoadSelf(dllhandle_t *handle)
+/*qbool Sys_LoadSelf(dllhandle_t *handle)
 {
 	dllhandle_t dllhandle = 0;
 
 	if (handle == NULL)
 		return false;
+#ifdef __WIIU__
+	return false;
+#endif
 #ifdef WIN32
 	dllhandle = LoadLibrary (NULL);
 #else
@@ -126,10 +131,31 @@ qbool Sys_LoadSelf(dllhandle_t *handle)
 #endif
 	*handle = dllhandle;
 	return true;
+}*/
+
+qbool Sys_LoadSelf(dllhandle_t *handle)
+{
+    dllhandle_t dllhandle = 0;
+    if (handle == NULL)
+        return false;
+
+#ifdef __WIIU__
+    return false;
+#elif defined(WIN32) // Use elif here!
+    dllhandle = LoadLibrary (NULL);
+#else
+    dllhandle = dlopen (NULL, RTLD_NOW | RTLD_GLOBAL);
+#endif
+
+    *handle = dllhandle;
+    return true;
 }
 
 qbool Sys_LoadDependency (const char** dllnames, dllhandle_t* handle, const dllfunction_t *fcts)
 {
+#ifdef __WIIU__
+	return false;
+#else
 #ifdef SUPPORTDLL
 	const dllfunction_t *func;
 	dllhandle_t dllhandle = 0;
@@ -219,15 +245,19 @@ notfound:
 #else
 	return false;
 #endif
+#endif
 }
 
-qbool Sys_LoadLibrary(const char *name, dllhandle_t *handle)
+/*qbool Sys_LoadLibrary(const char *name, dllhandle_t *handle)
 {
 	dllhandle_t dllhandle = 0;
 
 	if(handle == NULL)
 		return false;
 
+#ifdef __WIIU__
+	return false;
+#endif
 #ifdef SUPPORTDLL
 # ifdef WIN32
 	dllhandle = LoadLibrary (name);
@@ -240,9 +270,32 @@ qbool Sys_LoadLibrary(const char *name, dllhandle_t *handle)
 
 	*handle = dllhandle;
 	return true;
+}*/
+
+qbool Sys_LoadLibrary(const char *name, dllhandle_t *handle)
+{
+    dllhandle_t dllhandle = 0;
+    if(handle == NULL)
+        return false;
+
+#ifdef __WIIU__
+    return false;
+#elif defined(SUPPORTDLL) // Use elif here!
+# ifdef WIN32
+    dllhandle = LoadLibrary (name);
+# else
+    dllhandle = dlopen (name, RTLD_LAZY | RTLD_GLOBAL);
+# endif
+#endif
+
+    if(!dllhandle)
+        return false;
+    *handle = dllhandle;
+    return true;
 }
 
-void Sys_FreeLibrary (dllhandle_t* handle)
+
+/*void Sys_FreeLibrary (dllhandle_t* handle)
 {
 #ifdef SUPPORTDLL
 	if (handle == NULL || *handle == NULL)
@@ -256,10 +309,30 @@ void Sys_FreeLibrary (dllhandle_t* handle)
 
 	*handle = NULL;
 #endif
+}*/
+
+void Sys_FreeLibrary (dllhandle_t* handle)
+{
+#ifdef __WIIU__
+    // Do nothing
+#elif defined(SUPPORTDLL)
+    if (handle == NULL || *handle == NULL)
+        return;
+#ifdef WIN32
+    FreeLibrary (*handle);
+#else
+    dlclose (*handle);
+#endif
+    *handle = NULL;
+#endif
 }
 
-void* Sys_GetProcAddress (dllhandle_t handle, const char* name)
+
+/*void* Sys_GetProcAddress (dllhandle_t handle, const char* name)
 {
+#ifdef __WIIU__
+	return NULL;
+#endif
 #ifdef SUPPORTDLL
 #ifdef WIN32
 	return (void *)GetProcAddress (handle, name);
@@ -269,7 +342,23 @@ void* Sys_GetProcAddress (dllhandle_t handle, const char* name)
 #else
 	return NULL;
 #endif
+}*/
+
+void* Sys_GetProcAddress (dllhandle_t handle, const char* name)
+{
+#ifdef __WIIU__
+    return NULL;
+#elif defined(SUPPORTDLL)
+#ifdef WIN32
+    return (void *)GetProcAddress (handle, name);
+#else
+    return (void *)dlsym (handle, name);
+#endif
+#else
+    return NULL;
+#endif
 }
+
 
 
 

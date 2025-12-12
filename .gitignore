@@ -25,6 +25,8 @@ gmon.out
 *.opt
 *.plg
 *.exe
+*.elf
+*.rpx
 darkplaces_private.h
 darkplaces_private.rc
 Makefile.win

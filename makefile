@@ -257,13 +257,51 @@ ifeq ($(DP_MAKE_TARGET), mingw)
 endif
 
 
+# Wii U Configuration
+ifeq ($(DP_MAKE_TARGET), wiiu)
+    CC := powerpc-eabi-gcc
+    DEVKITPRO := /opt/devkitpro
+    
+    # Define BOTH paths
+    LIB_PATH_WIIU := $(DEVKITPRO)/portlibs/wiiu
+    LIB_PATH_PPC  := $(DEVKITPRO)/portlibs/ppc
+    WUT_PATH := $(DEVKITPRO)/wut
+
+    EXE_SV := darkplaces-server.elf
+    EXE_SDL := darkplaces-wiiu.elf
+
+    # Include BOTH include folders (Wii U first)
+    # Also explicitly add the SDL2 subfolder
+    CFLAGS_EXTRA := -D__WIIU__ -D__WUT__ -DNO_NET -DLHNET_DUMMY -DNO_DLOPEN \
+                    -I$(LIB_PATH_WIIU)/include \
+                    -I$(LIB_PATH_WIIU)/include/SDL2 \
+                    -I$(LIB_PATH_PPC)/include \
+                    -I$(WUT_PATH)/include
+
+    # Link BOTH library folders (Wii U first)
+    LDFLAGS_SDL := -specs=$(WUT_PATH)/share/wut.specs \
+                   -L$(LIB_PATH_WIIU)/lib \
+                   -L$(LIB_PATH_PPC)/lib \
+                   -L$(WUT_PATH)/lib \
+                   -lSDL2 -ljpeg -lz -lm -lwut
+
+    DP_SSE := 0
+    DP_LINK_SDL := static
+    DP_LINK_ZLIB := static
+    DP_LINK_JPEG := static
+    LDFLAGS_UNIXCOMMON :=
+endif
+
+
 ##### Library linking #####
 # SDL2
-SDL_CONFIG?=sdl2-config
+#SDL_CONFIG?=sdl2-config
+SDL_CONFIG=powerpc-eabi-pkg-config sdl2
 SDLCONFIG_UNIXCFLAGS?=`$(SDL_CONFIG) --cflags`
 SDLCONFIG_UNIXCFLAGS_X11?=
 SDLCONFIG_UNIXLIBS?=`$(SDL_CONFIG) --libs`
-SDLCONFIG_UNIXLIBS_X11?=-lX11
+#SDLCONFIG_UNIXLIBS_X11?=-lX11
+SDLCONFIG_UNIXLIBS_X11?=
 SDLCONFIG_UNIXSTATICLIBS?=`$(SDL_CONFIG) --static-libs`
 SDLCONFIG_UNIXSTATICLIBS_X11?=-lX11
 SDLCONFIG_MACOSXCFLAGS=$(SDLCONFIG_UNIXCFLAGS)
