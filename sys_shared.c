@@ -33,6 +33,10 @@
 # endif
 #endif
 
+#ifdef __WIIU__
+#include <coreinit/debug.h>
+#endif
+
 #include <signal.h>
 
 #include "quakedef.h"
@@ -833,6 +837,10 @@ void Sys_Error (const char *error, ...)
 
 	dp_strlcat(string, "\n\n", sizeof(string));
 	dp_strlcat(string, engineversion, sizeof(string));
+
+	#ifdef __WIIU__
+		OSReport("Sys_Error: %s\n", string); // 'string' is the formatted error string
+	#endif
 
 	// Most shutdown funcs can't be called here as they could error while we error.
 
