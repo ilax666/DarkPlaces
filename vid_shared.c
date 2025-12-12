@@ -1520,6 +1520,17 @@ struct vidfallback_s
 };
 static struct vidfallback_s vidfallbacks[] =
 {
+#ifdef __WIIU__
+    // Force Wii U friendly defaults immediately
+    {&vid_fullscreen, "0"}, // Try "windowed" mode (SDL maps this to full screen on console often, but safer)
+    {&vid_width, "1280"},
+    {&vid_height, "720"},
+    {&vid_bitsperpixel, "32"},
+    {&vid_samples, "0"}, // Disable MSAA
+	{&vid_stereobuffer, "0"},
+	{&vid_refreshrate, "0"},
+	{NULL, NULL}
+#else
 	{&vid_stereobuffer, "0"},
 	{&vid_samples, "1"},
 	{&vid_refreshrate, "0"},
@@ -1527,11 +1538,20 @@ static struct vidfallback_s vidfallbacks[] =
 	{&vid_height, "480"},
 	{&vid_bitsperpixel, "32"},
 	{NULL, NULL}
+#endif
 };
 
 // this is only called once by CL_StartVideo and again on each FS_GameDir_f
 void VID_Start(void)
 {
+#ifdef __WIIU__
+    // Force these cvars before anything else happens
+    Cvar_SetValueQuick(&vid_width, 1280);
+    Cvar_SetValueQuick(&vid_height, 720);
+    Cvar_SetValueQuick(&vid_fullscreen, 0); // 0 = Windowed (safest for SDL ports)
+    Cvar_SetValueQuick(&vid_bitsperpixel, 32);
+#endif
+
 	int i = 0;
 	int width, height, success;
 	if (vid_commandlinecheck)
