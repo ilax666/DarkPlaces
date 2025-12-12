@@ -290,6 +290,10 @@ ifeq ($(DP_MAKE_TARGET), wiiu)
     DP_LINK_ZLIB := static
     DP_LINK_JPEG := static
     LDFLAGS_UNIXCOMMON :=
+	LDFLAGS_LINUXSDL :=
+    
+    # Disable pkg-config so it doesn't mess up our flags
+    SDL_CONFIG := true
 endif
 
 
